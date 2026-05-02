@@ -2,11 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Users, UserPlus, Play, FileText, ChevronLeft, Volume2, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Bluetooth, BluetoothConnected, StopCircle, CheckCircle, Clock, Gauge, RefreshCw } from 'lucide-react';
 
 export default function ZaliTherapyApp() {
-  const [view, setView] = useState('patients'); 
-  const [patients, setPatients] = useState([
-    { id: 1, name: 'Mateo G.', age: 6, notes: 'Sensibilidad auditiva moderada' },
-    { id: 2, name: 'Sofía R.', age: 8, notes: 'Le gusta el color azul' }
-  ]);
+  const [view, setView] = useState('home'); 
+  const [patients, setPatients] = useState([]);
   const [therapies, setTherapies] = useState([]);
   const [activePatient, setActivePatient] = useState(null);
 
@@ -15,7 +12,8 @@ export default function ZaliTherapyApp() {
   const [bleDevice, setBleDevice] = useState(null);
   const [bleCharacteristic, setBleCharacteristic] = useState(null);
 
-  const goHome = () => setView('patients');
+  const goHome = () => setView('home');
+  const goPatients = () => setView('patients');
   const goMenu = (patient) => { setActivePatient(patient); setView('patientMenu'); };
   
   const connectBluetooth = async () => {
@@ -62,23 +60,26 @@ export default function ZaliTherapyApp() {
         
         <header className="bg-[#0F766E] text-white p-4 flex justify-between items-center shadow-md z-10 shrink-0">
           <div className="flex items-center gap-3">
-            {view !== 'patients' && (
-              <button onClick={view === 'patientMenu' ? goHome : () => goMenu(activePatient)} className="p-1 hover:bg-teal-700 rounded-lg transition-colors">
+            {view !== 'home' && (
+              <button onClick={view === 'patients' ? goHome : view === 'patientMenu' ? goPatients : goHome} className="p-1 hover:bg-teal-700 rounded-lg transition-colors">
                 <ChevronLeft size={24} />
               </button>
             )}
             <h1 className="text-xl font-bold tracking-wide">Zalí Clínica</h1>
           </div>
-          <button 
-            onClick={connectBluetooth}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${isConnected ? 'bg-teal-900 text-teal-200' : 'bg-rose-500 text-white'}`}
-          >
-            {isConnected ? <BluetoothConnected size={14} /> : <Bluetooth size={14} />}
-            {isConnected ? 'Zalí Conectado' : 'Vincular Pez'}
-          </button>
+          {view !== 'home' && (
+            <button 
+              onClick={connectBluetooth}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${isConnected ? 'bg-teal-900 text-teal-200' : 'bg-rose-500 text-white'}`}
+            >
+              {isConnected ? <BluetoothConnected size={14} /> : <Bluetooth size={14} />}
+              {isConnected ? 'Zalí Conectado' : 'Vincular Pez'}
+            </button>
+          )}
         </header>
 
         <main className="flex-1 overflow-y-auto">
+          {view === 'home' && <HomeView onStart={goPatients} />}
           {view === 'patients' && <PatientsView patients={patients} setPatients={setPatients} onSelect={goMenu} />}
           {view === 'patientMenu' && <PatientMenuView patient={activePatient} setView={setView} />}
           {view === 'metrics' && <MetricsView patient={activePatient} therapies={therapies} />}
@@ -93,6 +94,60 @@ export default function ZaliTherapyApp() {
             />
           )}
         </main>
+      </div>
+    </div>
+  );
+}
+
+// --- VISTA HOME / PORTADA ---
+function HomeView({ onStart }) {
+  return (
+    <div className="flex flex-col h-full bg-gradient-to-b from-[#0F766E] to-[#147D6B] text-white p-6">
+      {/* Logo y Título */}
+      <div className="flex-1 flex flex-col items-center justify-center text-center">
+        <div className="text-8xl mb-6 animate-bounce">🐡</div>
+        <h1 className="text-5xl font-black mb-4 tracking-tight">Zalí</h1>
+        <p className="text-xl font-semibold mb-8 text-teal-100">
+          Robot de asistencia para<br />Hidroterapia en pacientes con TEA
+        </p>
+        
+        {/* Descripción */}
+        <p className="text-sm text-teal-100 mb-12 leading-relaxed max-w-xs">
+          Sistema de control y seguimiento para sesiones de hidroterapia con dispositivos Bluetooth
+        </p>
+
+        {/* Características */}
+        <div className="bg-teal-900/30 backdrop-blur rounded-3xl p-8 w-full space-y-4 mb-12">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">✓</span>
+            <span className="text-base font-medium">Gestión de pacientes</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">✓</span>
+            <span className="text-base font-medium">Control remoto Joystick</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">✓</span>
+            <span className="text-base font-medium">Métricas de sesiones</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">✓</span>
+            <span className="text-base font-medium">Conexión Bluetooth</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Botón de inicio */}
+      <button 
+        onClick={onStart}
+        className="w-full bg-white text-[#0F766E] py-4 rounded-2xl font-bold text-lg shadow-lg hover:bg-slate-100 active:scale-95 transition-all mb-4"
+      >
+        Comenzar →
+      </button>
+
+      {/* Footer */}
+      <div className="text-center text-sm text-teal-200 pb-4">
+        <p>Versión 1.0.0</p>
       </div>
     </div>
   );
@@ -123,14 +178,22 @@ function PatientsView({ patients, setPatients, onSelect }) {
           <UserPlus size={24} />
         </button>
       </form>
-      <div className="space-y-3">
-        {patients.map(p => (
-          <div key={p.id} onClick={() => onSelect(p)} className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex justify-between items-center cursor-pointer hover:border-teal-400 transition-all">
-            <div><h3 className="font-bold text-lg text-slate-700">{p.name}</h3></div>
-            <ChevronLeft size={20} className="text-slate-300 rotate-180" />
-          </div>
-        ))}
-      </div>
+      
+      {patients.length === 0 ? (
+        <div className="text-center bg-slate-100 p-8 rounded-2xl border border-slate-200 mt-10">
+          <p className="text-slate-500 font-medium">No hay pacientes registrados.</p>
+          <p className="text-slate-400 text-sm mt-2">Agrega un nuevo paciente para comenzar.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {patients.map(p => (
+            <div key={p.id} onClick={() => onSelect(p)} className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex justify-between items-center cursor-pointer hover:border-teal-400 transition-all">
+              <div><h3 className="font-bold text-lg text-slate-700">{p.name}</h3></div>
+              <ChevronLeft size={20} className="text-slate-300 rotate-180" />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
